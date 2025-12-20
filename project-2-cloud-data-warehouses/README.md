@@ -1,189 +1,140 @@
-# Project 2: Cloud Data Warehouse
+# Project 2: Data Warehousing with AWS (Sparkify ETL)
 
-## Project Introduction
+This repository contains the ETL pipeline for the "Sparkify" music streaming startup course project. The pipeline loads JSON song and log data from S3 into staging tables on Amazon Redshift, then transforms and inserts the data into a star-schema analytics schema.
 
-A music streaming startup, Sparkify, has grown their user base and song database and want to move their processes and data onto the cloud. Their data resides in S3, in a directory of JSON logs on user activity on the app, as well as a directory with JSON metadata on the songs in their app.
+## Contents / Repository structure
 
-As the data engineer, we are tasked with building an ETL pipeline that extracts data from S3, stages them in Redshift, and transforms data into a set of dimensional tables for their analytics team to continue finding insights into what songs their users are listening to.
+- `create_tables.py` - Connects to Redshift and creates/drops tables defined in `sql_queries.py`.
+- `etl.py` - Loads data from S3 into staging tables and then inserts data into the final analytics tables.
+- `sql_queries.py` - All SQL statements:
+  - CREATE / DROP statements
+  - COPY statements for staging tables
+  - INSERT statements for final tables
+  - Lists for orchestrating actions in `create_tables.py` and `etl.py`
+- `dwh.cfg` - Configuration file (credentials, cluster, IAM role ARN, S3 paths). **Do not commit secrets** to public repos.
+- `etl_tests.ipynb` - Jupyter notebook used to validate the ETL and inspect data on Redshift.
 
+## Project overview
 
-### Tools used
-* Python, SQL
-* Juypter Notebook
-* AWS Services (Redshift, S3, EC2, IAM, VPC, Boto3, CLI)
+Goal: Build an ETL pipeline that:
+1. Copies raw JSON event and song data from S3 into Redshift staging tables.
+2. Transforms and inserts the data into a set of star-schema tables:
+   - Fact: `songplays`
+   - Dimension: `users`, `songs`, `artists`, `time`
+3. Validate by running queries / the provided notebook.
 
-## AWS Configuration
-Creating resources on AWS using the AWS management console to support the Redshift data warehouse. 
-#### 1. Create an IAM Role
-* create a `myRedshiftRole` IAM role with the `AmazonS3ReadOnlyAccess` permission policy attached
-#### 2. Create Security Group for Redshift
-* create a `redshift_security_group` security group that authorizes Redshift cluster access (with the default VPC)
-#### 3. Create an IAM User for Redshift
-* create an IAM user with below two permission policies attached, and create and save the `Access key` and `Security access key`
-    * `AmazonRedshiftFullAccess`
-    * `AmazonS3ReadOnlyAccess`
-#### 4. Launch a Redshift Cluster
-* create the `redshift-cluster-1` cluster that attaches the `myRedshiftRole` role and the `redshift_security_group` security group 
+## Prerequisites
 
-> ***NOTE:** Make sure to delete the cluster each time finish working to avoid large, unexpected costs*
+- An AWS account with:
+  - A Redshift cluster (publicly accessible or accessible from where you run scripts)
+  - An IAM role with the necessary S3 read permissions attached to the Redshift cluster
+- The S3 dataset used by the Udacity project
+- Python 3.7+
+- Python packages:
+  - psycopg2 (or psycopg2-binary)
+  - boto3
+  - configparser (built-in for Python 3)
+  - jupyter
+  - ipython-sql
 
-## Project Data Exploration
-
-* Using the [AWS CLI S3 commands](https://docs.aws.amazon.com/cli/latest/userguide/cli-services-s3-commands.html) to list bucket objects
-
-```
-aws configure
-AWS Access Key ID: {KEY}
-AWS Secret Access Key: {SECRET}
-
-aws s3 ls s3://udacity-dend/log_data/2018/11/
-aws s3 ls s3://udacity-dend/song_data/A/A/A/
-```
-
-
-* Download sample data to local to explore the data (check data type etc.)
-
-```
-aws s3 cp s3://udacity-dend/song_data/A/A/A/TRAAAAK128F9318786.json sample_data/TRAAAAK128F9318786.json
-
-aws s3 cp s3://udacity-dend/log_data/2018/11/2018-11-30-events.json sample_data/2018-11-30-events.json
-
-aws s3 cp s3://udacity-dend/log_json_path.json sample_data/log_json_path.json
+Install python deps (example):
+```bash
+pip install psycopg2-binary boto3 jupyter ipython-sql
 ```
 
-## ETL Pipeline
+## Configuration
 
-* [etl_tests.ipynb] - test AWS Configurations and the ETL process, including validation and example analytical queries
-* [sql_queries.py] - a collection of SQL queries for `create_tables.py` and `etl.py`
+1. fill in your values in `dwh.cfg`
 
-1. Run [create_tables.py]( to create Staging, Fact and Dimension table schema using command `python3 create_tables.py`
-* `drop_tables` - drop table if exists 
-* `create_tables` - create tables
+Example `dwh.cfg` (sensitive values shown as placeholders):
+```ini
+[CLUSTER]
+HOST=redshift-cluster-1.xxx.us-west-2.redshift.amazonaws.com
+DB_NAME=dev
+DB_USER=your_redshift_user
+DB_PASSWORD=your_password
+DB_PORT=5439
 
-2. Run [etl.py] to complete the ETL process using command `python3 etl.py`
-* `load_staging_tables` 
-    - load/copy raw data from S3 buckets to Redshift staging tables
-    - reference: [Using the COPY command to load from Amazon S3](https://docs.aws.amazon.com/redshift/latest/dg/t_loading-tables-from-s3.html)
-* `insert_tables` 
-    - transforming staging tables to star-schema fact & dimension tables for song play analysis
+[IAM_ROLE]
+ARN=arn:aws:iam::123456789012:role/YourRedshiftRole
 
-## Database Schema for Song Play Analysis
+[S3]
+LOG_DATA=s3://your-bucket/log_data
+LOG_JSONPATH=s3://your-bucket/log_json_path.json
+SONG_DATA=s3://your-bucket/song_data
 
-* ### Staging Tables 
-
+[AWS]
+KEY=YOUR_AWS_ACCESS_KEY_ID
+SECRET=YOUR_AWS_SECRET_ACCESS_KEY
 ```
-staging_events 
-          - artist          
-          - auth
-          - firstName
-          - gender
-          - itemInSession
-          - lastName
-          - length
-          - level
-          - location
-          - method
-          - page
-          - registration
-          - sessionId
-          - song
-          - status
-          - ts
-          - userAgent
-          - userId
 
-staging_songs 
-          - artist_id        
-          - artist_latitude
-          - artist_location
-          - artist_longitude
-          - artist_name
-          - duration
-          - num_songs
-          - song_id
-          - title
-          - year
+- `IAM_ROLE:ARN` must be the role attached to your Redshift cluster with S3 read access.
+- `S3` keys should point to the JSON data and optionally the JSONPaths file for log_data.
+- The scripts read `dwh.cfg` from the current working directory.
+
+## How to run
+
+1. Ensure `dwh.cfg` is filled and your local environment can reach the Redshift cluster.
+
+2. Create (or recreate) the tables:
+```bash
+python3 create_tables.py
 ```
-* ### Fact Table 
+This script will:
+- Read `dwh.cfg`
+- Connect to Redshift
+- Drop existing tables (if any)
+- Create staging and final tables
 
-
+3. Run the ETL:
+```bash
+python3 etl.py
 ```
-songplays 
-          - songplay_id       PRIMARY KEY
-          - start_time
-          - user_id
-          - level
-          - song_id
-          - artist_id
-          - session_id
-          - duration
-          - user_agent
+This script will:
+- COPY data from S3 into `staging_events` and `staging_songs`
+- Insert and transform data into final tables (`songplays`, `users`, `songs`, `artists`, `time`)
+
+4. Validate / inspect results:
+- Launch `etl_tests.ipynb`:
+```bash
+jupyter notebook etl_tests.ipynb
 ```
-* ### Dimension Tables 
+- The notebook connects to the Redshift cluster using values from `dwh.cfg`, lists tables and sample rows, and runs basic validation queries.
 
-```
-users 
-          - user_id           PRIMARY KEY
-          - first_name
-          - last_name
-          - gender
-          - level
+## Notes on SQL / Design
 
-songs 
-          - song_id           PRIMARY KEY
-          - title
-          - artist_id
-          - year
-          - duration
+- Staging tables:
+  - `staging_events` stores raw log data
+  - `staging_songs` stores raw song metadata
+- Fact table:
+  - `songplays` — uses an IDENTITY column for `songplay_id` and stores `start_time`, `user_id`, `song_id`, `artist_id`, etc.
+- Dimensions:
+  - `users`, `songs`, `artists`, `time`
+- COPY commands are defined in `sql_queries.py`. They use the `IAM_ROLE` ARN and S3 paths from `dwh.cfg`.
 
-artists 
-          - artist_id         PRIMARY KEY
-          - name
-          - location
-          - latitude
-          - longitude
+## Idempotency & behavior
 
-time 
-          - start_time        PRIMARY KEY
-          - hour
-          - day
-          - week
-          - month
-          - year
-          - weekday
-```
-> **NOTE:** 
-> * _Amazon Redshift automatically assigns a `NOT NULL` condition to columns defined as `PRIMARY KEY`. 
+- `create_tables.py` uses `CREATE TABLE IF NOT EXISTS`.
+- INSERT queries use `SELECT DISTINCT` to reduce duplicates, but depending on how often you run them and data characteristics, additional deduplication or UPSERT logic may be required.
 
-## Setup & Run Jupyter Notebooks in VS Code w/ Virtual Env & Kernels
+## Common errors & troubleshooting
 
-* create a virtual environment
-  ```
-  python3 -m venv udacity-dend-aws
-  ```
-* activate the virtual env
-  ```
-  source udacity-dend-aws/bin/activate
-  ```
-* Installation 
+- Connection issues:
+  - Make sure Redshift accepts connections from your IP (VPC configuration / security groups).
+  - Ensure host, port, database, user, password are correct.
+- COPY failures:
+  - Ensure the IAM role ARN in `dwh.cfg` is attached to the Redshift cluster and has access to the S3 bucket.
+  - If using access keys instead of IAM role, configure COPY to use `ACCESS_KEY_ID`/`SECRET_ACCESS_KEY` — but IAM role is recommended.
+  - Check S3 path and JSONPaths file path (for event logs) are correct and accessible.
+- Missing Python dependencies:
+  - Install `psycopg2-binary`, `boto3`, etc.
+- Data type / casting errors:
+  - The provided SQL expects certain fields/types in the Udacity dataset. If using a custom dataset adapt the schema/queries.
 
-  ```
-  pip install jupyterlab
-  
-  pip install ipykernel
-  ```
-  _Validate that the install has succeeded by running `jupyter-lab` from your command line. A new tab should open in your browser, with the JupyterLab application running._
-  
-  * install useful Python packages in this virtual env
-  
+## Security
 
-  ```
-  pip install boto3
-  pip install psycopg2
-  ```
-  
-* register the new virtual env with Jupyter so that you can use it within JupyterLab
+- Do not commit `dwh.cfg` with real credentials to a public repository.
+- Prefer using IAM roles attached to the Redshift cluster instead of embedding AWS keys.
 
-    ```
-    python3 -m ipykernel install --user --name=‘udacity-dend-aws‘ 
-    ```
+## Clean up
+- Delete redshift and other resources if not required to avoid additional billing
