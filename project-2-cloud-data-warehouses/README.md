@@ -153,18 +153,17 @@ time
           - weekday
 ```
 > **NOTE:** 
-> * _The `SERIAL` command in Postgres is not supported in Redshift. The equivalent in redshift is `IDENTITY(0,1)`, which you can read more on in the [Redshift Create Table Docs](https://docs.aws.amazon.com/redshift/latest/dg/r_CREATE_TABLE_NEW.html)._
-> * _Amazon Redshift automatically assigns a `NOT NULL` condition to columns defined as `PRIMARY KEY`. You don't need to specify it separately. This can simplify the table create scripts._
+> * _Amazon Redshift automatically assigns a `NOT NULL` condition to columns defined as `PRIMARY KEY`. 
 
 ## Setup & Run Jupyter Notebooks in VS Code w/ Virtual Env & Kernels
 
 * create a virtual environment
   ```
-  python3 -m venv udacity-dend 
+  python3 -m venv udacity-dend-aws
   ```
 * activate the virtual env
   ```
-  source udacity-dend/bin/activate
+  source udacity-dend-aws/bin/activate
   ```
 * Installation 
 
@@ -186,5 +185,5 @@ time
 * register the new virtual env with Jupyter so that you can use it within JupyterLab
 
     ```
-    python3 -m ipykernel install --user --name=‘udacity-dend‘ 
+    python3 -m ipykernel install --user --name=‘udacity-dend-aws‘ 
     ```
