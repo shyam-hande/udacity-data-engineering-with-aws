@@ -5,14 +5,8 @@ from sql_queries import copy_table_queries, insert_table_queries
 
 def load_staging_tables(cur, conn):
      """
-    Load data from S3 into staging tables on Redshift using the queries in `copy_table_queries` list.
-
-    Parameters:
-        cur: (psycopg2.extensions.cursor): The PostgreSQL cursor object.
-        conn: (psycopg2.extensions.connection): The PostgreSQL connection object.
-
-    Returns:
-        None
+    Load data from S3 into staging tables on Redshift.
+    It is using the queries in `copy_table_queries` list.
     """
     for query in copy_table_queries:
         cur.execute(query)
@@ -21,7 +15,8 @@ def load_staging_tables(cur, conn):
 
 def insert_tables(cur, conn):
     """
-    Insert data from staging tables into analytics tables on Redshift using the queries in `insert_table_queries` list.
+    Inserts data from staging tables into analytics tables on Redshift.
+    It is using the queries in `insert_table_queries` list.
     """
     for query in insert_table_queries:
         cur.execute(query)
