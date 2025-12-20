@@ -6,13 +6,6 @@ from sql_queries import create_table_queries, drop_table_queries
 def drop_tables(cur, conn):
     """
     Drop each table using the queries in `drop_table_queries` list.
-
-    Parameters:
-        cur: (psycopg2.extensions.cursor): The PostgreSQL cursor object.
-        conn: (psycopg2.extensions.connection): The PostgreSQL connection object.
-
-    Returns:
-        None
     """
     for query in drop_table_queries:
         cur.execute(query)
@@ -30,7 +23,7 @@ def create_tables(cur, conn):
 
 def main():
     """
-    Main function to drop and create tables for the Sparkify database.
+    Main function to create and drop tables for Sparkify database.
     """
     config = configparser.ConfigParser()
     config.read('dwh.cfg')
