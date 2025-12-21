@@ -1,39 +1,31 @@
 import configparser
 import psycopg2
-from sql_queries import copy_table_queries, insert_table_queries
+from sql_queries import copy_table_queries_list, insert_table_queries_list
 
+# S3 to staging tables on Redshift.
+def load_staging_tables(cursor, connection):    
+    for query in copy_table_queries_list:
+        cursor.execute(query)
+        connection.commit()
 
-def load_staging_tables(cur, conn):
-     """
-    Load data from S3 into staging tables on Redshift.
-    It is using the queries in `copy_table_queries` list.
-    """
-    for query in copy_table_queries:
-        cur.execute(query)
-        conn.commit()
-
-
-def insert_tables(cur, conn):
-    """
-    Inserts data from staging tables into analytics tables on Redshift.
-    It is using the queries in `insert_table_queries` list.
-    """
-    for query in insert_table_queries:
-        cur.execute(query)
-        conn.commit()
+# staging tables to analytics tables on Redshift.
+def insert_tables(cursor, connection):
+    for query in insert_table_queries_list:
+        cursor.execute(query)
+        connection.commit()
 
 
 def main():
     config = configparser.ConfigParser()
     config.read('dwh.cfg')
 
-    conn = psycopg2.connect("host={} dbname={} user={} password={} port={}".format(*config['CLUSTER'].values()))
-    cur = conn.cursor()
+    connection = psycopg2.connect("host={} dbname={} user={} password={} port={}".format(*config['CLUSTER'].values()))
+    cursor = connection.cursor()
     
-    load_staging_tables(cur, conn)
-    insert_tables(cur, conn)
+    load_staging_tables(cursor, connection)
+    insert_tables(cursor, connection)
 
-    conn.close()
+    connection.close()
 
 
 if __name__ == "__main__":
