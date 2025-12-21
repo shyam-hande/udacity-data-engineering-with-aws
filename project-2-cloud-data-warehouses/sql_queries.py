@@ -124,17 +124,19 @@ staging_events_copy = ("""
     copy staging_events 
     from {}
     iam_role {}
-    json {};
+    json {}
+    REGION 'us-west-2';
 """).format(LOG_DATA, ARN, LOG_JSONPATH)
 
 staging_songs_copy = ("""
     copy staging_songs
     from {}
     iam_role {}
-    json 'auto';
+    json 'auto'
+    REGION 'us-west-2';
 """).format(SONG_DATA, ARN)
 
-# FINAL TABLES
+# FINAL TABLES QUERIES
 
 songplay_table_insert = ("""
     INSERT INTO songplays (start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
