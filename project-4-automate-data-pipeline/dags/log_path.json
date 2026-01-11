@@ -3,9 +3,9 @@
         "$['artist']",
         "$['auth']",
         "$['firstName']",
-        "$['lastName']",
         "$['gender']",
         "$['itemInSession']",
+        "$['lastName']",
         "$['length']",
         "$['level']",
         "$['location']",
@@ -13,10 +13,10 @@
         "$['page']",
         "$['registration']",
         "$['sessionId']",
-        "$['userAgent']",
-        "$['userId']",
         "$['song']",
         "$['status']",
-        "$['ts']"
+        "$['ts']",
+        "$['userAgent']",
+        "$['userId']"
     ]
 }

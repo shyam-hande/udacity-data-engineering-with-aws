@@ -1,5 +1,4 @@
 from airflow.models.baseoperator import BaseOperator
-from airflow.utils.decorators import apply_defaults
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 
@@ -10,7 +9,6 @@ class PostgreSQLOperator(BaseOperator):
     template_ext = ('.sql')
     template_fields_renderers = {'sql': 'sql'}
 
-    @apply_defaults
     def __init__(self,
                  *,
                  sql: str = '',

@@ -1,7 +1,6 @@
 from airflow.models import BaseOperator
-from airflow.utils.decorators import apply_defaults
-from airflow.secrets.metastore import MetastoreBackend
-from airflow.hooks.postgres_hook import PostgresHook
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 
 class StageToRedshiftOperator(BaseOperator):
@@ -16,7 +15,6 @@ class StageToRedshiftOperator(BaseOperator):
         FORMAT AS JSON '{}';
     """
 
-    @apply_defaults
     def __init__(self,
                  redshift_conn_id="",
                  aws_credentials_id="",
@@ -36,9 +34,9 @@ class StageToRedshiftOperator(BaseOperator):
         
 
     def execute(self, context):
-        metastoreBackend = MetastoreBackend()
-        aws_connection = metastoreBackend.get_connection(
-            self.aws_credentials_id)
+        s3_hook = S3Hook(aws_conn_id=self.aws_credentials_id)
+        credentials = s3_hook.get_credentials()
+    
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
 
         self.log.info("Delete data from Redshift table")
@@ -54,16 +52,16 @@ class StageToRedshiftOperator(BaseOperator):
             formatted_sql = StageToRedshiftOperator.copy_sql.format(
                 self.table,
                 s3_path,
-                aws_connection.login,
-                aws_connection.password,
+                credentials.access_key,
+                credentials.secret_key,
                 self.log_json_file
             )
         else:
             formatted_sql = StageToRedshiftOperator.copy_sql.format(
                 self.table,
                 s3_path,
-                aws_connection.login,
-                aws_connection.password,
+                credentials.access_key,
+                credentials.secret_key,
                 "auto"
             )
         redshift.run(formatted_sql)

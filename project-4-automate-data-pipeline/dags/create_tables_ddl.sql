@@ -1,19 +1,20 @@
 DROP TABLE IF EXISTS staging_songs;
 DROP TABLE IF EXISTS staging_events;
 
-DROP TABLE IF EXISTS songs;
-DROP TABLE IF EXISTS artists;
 DROP TABLE IF EXISTS songplays;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS artists;
+DROP TABLE IF EXISTS songs;
+
 DROP TABLE IF EXISTS time;
 
 CREATE TABLE IF NOT EXISTS staging_songs (
         num_songs           INT,
         artist_id           VARCHAR,
-        artist_name         VARCHAR,
         artist_latitude     FLOAT,
         artist_longitude    FLOAT,
         artist_location     TEXT,
+        artist_name         VARCHAR,
         song_id             VARCHAR,
         title               VARCHAR,
         duration            FLOAT,
@@ -24,9 +25,9 @@ CREATE TABLE IF NOT EXISTS staging_events (
         artist              VARCHAR,
         auth                VARCHAR,
         firstName           VARCHAR,
-        lastName            VARCHAR,
         gender              CHAR(1),
         itemInSession       INT,
+        lastName            VARCHAR,
         length              FLOAT,
         level               VARCHAR,
         location            TEXT,
@@ -34,39 +35,23 @@ CREATE TABLE IF NOT EXISTS staging_events (
         page                VARCHAR,
         registration        FLOAT,
         sessionId           INT,
-        userAgent           TEXT,
-        userId              VARCHAR,
         song                VARCHAR,
         status              INT,
         ts                  BIGINT,
-);
-
-CREATE TABLE IF NOT EXISTS songs (
-        song_id             VARCHAR     PRIMARY KEY,
-        artist_id           VARCHAR,
-        title               VARCHAR,
-        year                INT,
-        duration            FLOAT
-);
-
-CREATE TABLE IF NOT EXISTS artists (
-        artist_id           VARCHAR     PRIMARY KEY,
-        name                VARCHAR,
-        latitude            FLOAT,
-        longitude           FLOAT,
-        location            TEXT,
+        userAgent           TEXT,
+        userId              VARCHAR
 );
 
 
 
 CREATE TABLE IF NOT EXISTS songplays (
         songplay_id         VARCHAR     PRIMARY KEY,
-        song_id             VARCHAR,
-        artist_id           VARCHAR,
-        sessionid           INT,
         start_time          TIMESTAMP   NOT NULL,
         userid              VARCHAR,
         level               VARCHAR,
+        song_id             VARCHAR,
+        artist_id           VARCHAR,
+        sessionid           INT,
         location            TEXT,
         useragent           TEXT
 );
@@ -79,6 +64,22 @@ CREATE TABLE IF NOT EXISTS users(
         level               VARCHAR
 );
 
+CREATE TABLE IF NOT EXISTS artists (
+        artist_id           VARCHAR     PRIMARY KEY,
+        name                VARCHAR,
+        location            TEXT,
+        latitude            FLOAT,
+        longitude           FLOAT
+);
+
+CREATE TABLE IF NOT EXISTS songs (
+        song_id             VARCHAR     PRIMARY KEY,
+        title               VARCHAR,
+        artist_id           VARCHAR,
+        year                INT,
+        duration            FLOAT
+);
+
 
 
 CREATE TABLE IF NOT EXISTS time (
@@ -86,7 +87,7 @@ CREATE TABLE IF NOT EXISTS time (
         hour                INT,
         day                 INT,
         week                INT,
-        weekday             INT,
         month               INT,
-        year                INT   
+        year                INT,
+        weekday             INT
 );

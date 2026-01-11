@@ -1,9 +1,9 @@
 from airflow.decorators import dag
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 import pendulum
 from datetime import timedelta
 
-from final_project_operator.redshift_custom_operator import PostgreSQLOperator
+from final_project_operators.redshift_custom_operator import PostgreSQLOperator
 
 default_arguments = {
     'owner': 'Shyam',
@@ -18,10 +18,10 @@ default_arguments = {
 @dag(
     default_args=default_arguments,
     description='Dag for creating tables in Redshift',
-    schedule_interval='0 * * * *'
+    schedule='0 * * * *'
 )
 def create_tables_fn():
-    start_operator = DummyOperator(task_id='begin_execution')
+    start_operator = EmptyOperator(task_id='begin_execution')
 
     create_redshift_tables = PostgreSQLOperator(
         task_id='create_tables',
@@ -29,7 +29,7 @@ def create_tables_fn():
         sql='create_tables_ddl.sql'
     )
 
-    end_operator = DummyOperator(task_id='stop_execution')
+    end_operator = EmptyOperator(task_id='stop_execution')
 
     start_operator >> create_redshift_tables >> end_operator
 

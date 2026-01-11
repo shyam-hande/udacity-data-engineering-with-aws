@@ -1,5 +1,5 @@
 from airflow.decorators import dag
-from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from datetime import datetime, timedelta
 
 from final_project_operators.data_quality import DataQualityOperator
@@ -7,7 +7,7 @@ from final_project_operators.stage_redshift import StageToRedshiftOperator
 from final_project_operators.load_fact import LoadFactOperator
 from final_project_operators.load_dimension import LoadDimensionOperator
 
-from udacity.common.final_project_sql_statements import SqlQueries
+from final_project_sql_statements import SqlQueries
 
 default_arguments = {
     'owner': 'Shyam',
@@ -23,12 +23,12 @@ default_arguments = {
 @dag(
     default_args=default_arguments,
     description='Dag for loading and transforming data in Redshift',
-    end_date=datetime(2016, 1, 12),
-    schedule_interval='0 * * * *'
+    end_date=datetime(2026, 1, 12),
+    schedule='0 * * * *'
 )
 def final_project():
 
-    start_operator = DummyOperator(task_id='begin_execution')
+    start_operator = EmptyOperator(task_id='begin_execution')
 
     stage_songs_to_redshift = StageToRedshiftOperator(
         task_id='stage_songs',
@@ -46,7 +46,7 @@ def final_project():
         table='staging_events',
         s3_bucket='shyam-automate-data-pipelines',
         s3_key='log-data',
-        log_json_file='log_path.json'
+        log_json_file='log_json_path.json'
     )
 
     load_song_dimension_table = LoadDimensionOperator(
@@ -94,7 +94,7 @@ def final_project():
         tables=['songs', 'artists', 'songplays', 'users', 'time']
     )
 
-    end_operator = DummyOperator(task_id='Stop_execution')
+    end_operator = EmptyOperator(task_id='stop_execution')
 
     start_operator >> [stage_songs_to_redshift,stage_events_to_redshift ] >> \
         load_songplays_table >> [load_song_dimension_table, load_artist_dimension_table,load_user_dimension_table, load_time_dimension_table] >> \
